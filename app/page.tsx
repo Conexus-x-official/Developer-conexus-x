@@ -1,69 +1,120 @@
-import Image from "next/image";
+import Link from "next/link";
+import type { ReactNode } from "react";
+import { H1, Lead, H2, P } from "@/components/docs/Prose";
+import { API_RESOURCES } from "@/lib/apiReference";
+
+/** LAYOUT.md §7's icon-tile recipe: bg-card + border, never a loose glyph — one repeatable idea instead of four differently-styled marks. */
+function IconTile({ children }: { children: ReactNode }) {
+    return (
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-hairline bg-card text-accent">
+            {children}
+        </div>
+    );
+}
+
+function Card({ href, title, description, icon }: { href: string; title: string; description: string; icon: ReactNode }) {
+    return (
+        <Link
+            href={href}
+            className="flex flex-col gap-3 rounded-xl border border-hairline bg-card p-5 shadow-sm transition hover:border-accent/50 hover:shadow-md"
+        >
+            <IconTile>{icon}</IconTile>
+            <div>
+                <h3 className="font-bold text-foreground font-sans">{title}</h3>
+                <p className="mt-1.5 text-sm text-body">{description}</p>
+            </div>
+        </Link>
+    );
+}
+
+const ICONS = {
+    api: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="4" width="18" height="16" rx="2" />
+            <path d="M7 9h4M7 13h7M7 17h5" />
+        </svg>
+    ),
+    sdk: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M9 4 3 12l6 8M15 4l6 8-6 8" />
+        </svg>
+    ),
+    cli: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="4" width="18" height="16" rx="2" />
+            <path d="m7 9 3 3-3 3M13 15h4" />
+        </svg>
+    ),
+    key: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="8" cy="15" r="4" />
+            <path d="m10.5 12.5 8-8M16 5l2 2M13 8l2 2" />
+        </svg>
+    ),
+};
 
 export default function Home() {
-  return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    return (
+        <div>
+            <H1>Conexus X developer docs</H1>
+            <Lead>
+                Two ways to build on Conexus X: call the REST API directly against your workspace data, or ship a
+                custom view that runs inside a module — the way a monday.com module view works.
+            </Lead>
+
+            <div className="mt-8 grid gap-4 sm:grid-cols-2">
+                <Card
+                    href="/api-reference"
+                    icon={ICONS.api}
+                    title="REST API"
+                    description={`${API_RESOURCES.length} resources — workspaces, modules, records and everything they hold. List, create, update and delete over plain HTTP.`}
+                />
+                <Card
+                    href="/sdk"
+                    icon={ICONS.sdk}
+                    title="Extensions SDK"
+                    description="Build a view that runs in an iframe inside a module, talking to the host over one postMessage bridge. Framework-free core, React hooks on the side."
+                />
+                <Card
+                    href="/cli"
+                    icon={ICONS.cli}
+                    title="CLI & templates"
+                    description="npm create @conexus-x/app — scaffold a Next.js or React starter for a new view in one command."
+                />
+                <Card
+                    href="/authentication"
+                    icon={ICONS.key}
+                    title="Authentication"
+                    description="Every call — REST or SDK-proxied — runs as a real signed-in user, authenticated with a Personal Integration Token."
+                />
+            </div>
+
+            <H2>How the two fit together</H2>
+            <P>
+                The REST API is the full surface, authenticated with your own Personal Integration Token (PIT) — anything
+                you could do signed in, a script can do too. The Extensions SDK is a narrower, sandboxed slice of that
+                same API: a custom view never sees your PIT key, only the subset of endpoints its manifest declared and
+                an admin approved, proxied through the host with the viewing user&rsquo;s own session.
+            </P>
+            <P>
+                Building an internal script, a data sync, or a CI job against your own workspace? Start with{" "}
+                <Link href="/authentication" className="font-medium text-accent hover:underline">
+                    Authentication
+                </Link>{" "}
+                and the{" "}
+                <Link href="/api-reference" className="font-medium text-accent hover:underline">
+                    REST API reference
+                </Link>
+                . Building something other people install into their own workspace? Start with the{" "}
+                <Link href="/sdk" className="font-medium text-accent hover:underline">
+                    Extensions SDK
+                </Link>{" "}
+                and scaffold from the{" "}
+                <Link href="/cli" className="font-medium text-accent hover:underline">
+                    CLI
+                </Link>
+                .
+            </P>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
-  );
+    );
 }
